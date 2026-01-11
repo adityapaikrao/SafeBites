@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: safebites-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH0_DOMAIN
+        sync: false
+      - key: AUTH0_API_AUDIENCE
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ENV
+        value: production

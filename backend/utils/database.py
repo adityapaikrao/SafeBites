@@ -1,130 +1,151 @@
 """
-Database utilities for reading and writing JSON data files
+Database operations for SafeBites using SQLAlchemy
 """
-import json
-import os
+import logging
+from datetime import datetime
 from typing import Dict, List, Optional, Any
-from pathlib import Path
-from config import settings
+from sqlalchemy.orm import Session
 
-# Ensure data directory exists
-DATA_DIR = Path(settings.data_dir)
-DATA_DIR.mkdir(exist_ok=True)
+from models import User, Scan, Favorite, DIETARY_TEMPLATES
 
-USERS_FILE = DATA_DIR / "users.json"
-SCANS_FILE = DATA_DIR / "scans.json"
+logger = logging.getLogger(__name__)
 
 
-def read_json_file(file_path: Path, default: Any = None) -> Any:
-    """Read JSON file, return default if file doesn't exist"""
-    if not file_path.exists():
-        return default if default is not None else {}
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError) as e:
-        print(f"Error reading {file_path}: {e}")
-        return default if default is not None else {}
+# ============== User Operations ==============
+
+def get_user(db: Session, user_id: str) -> Optional[Dict]:
+    """Get user by ID, returns dict for API compatibility"""
+    user = db.query(User).filter(User.id == user_id).first()
+    return user.to_dict() if user else None
 
 
-def write_json_file(file_path: Path, data: Any) -> bool:
-    """Write data to JSON file"""
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
-    except IOError as e:
-        print(f"Error writing {file_path}: {e}")
-        return False
-
-
-# User operations
-def get_user(user_id: str) -> Optional[Dict]:
-    """Get user by ID"""
-    users = read_json_file(USERS_FILE, {})
-    return users.get(user_id)
-
-
-def create_or_update_user(user_data: Dict) -> Dict:
+def create_or_update_user(db: Session, user_data: Dict) -> Dict:
     """Create or update user"""
-    users = read_json_file(USERS_FILE, {})
     user_id = user_data.get('id')
     if not user_id:
         raise ValueError("User ID is required")
     
-    existing_user = users.get(user_id, {})
+    user = db.query(User).filter(User.id == user_id).first()
     
-    # Preserve existing preferences if not provided in update
-    user = {
-        **existing_user,
-        **user_data,
-        'id': user_id,
-        'createdAt': existing_user.get('createdAt') or user_data.get('createdAt'),
-        'scans': existing_user.get('scans', []),
-        # Preserve existing preferences if new ones aren't provided
-        'allergies': user_data.get('allergies') if 'allergies' in user_data else existing_user.get('allergies'),
-        'dietGoals': user_data.get('dietGoals') if 'dietGoals' in user_data else existing_user.get('dietGoals'),
-        'avoidIngredients': user_data.get('avoidIngredients') if 'avoidIngredients' in user_data else existing_user.get('avoidIngredients'),
-    }
-    users[user_id] = user
-    write_json_file(USERS_FILE, users)
-    return user
+    if user:
+        # Update existing user
+        if 'email' in user_data:
+            user.email = user_data['email']
+        if 'name' in user_data:
+            user.name = user_data['name']
+        if 'picture' in user_data:
+            user.picture = user_data['picture']
+        if 'allergies' in user_data:
+            user.allergies = user_data['allergies']
+        if 'dietGoals' in user_data:
+            user.diet_goals = user_data['dietGoals']
+        if 'avoidIngredients' in user_data:
+            user.avoid_ingredients = user_data['avoidIngredients']
+        user.updated_at = datetime.utcnow()
+    else:
+        # Create new user
+        user = User(
+            id=user_id,
+            email=user_data.get('email', ''),
+            name=user_data.get('name'),
+            picture=user_data.get('picture'),
+            allergies=user_data.get('allergies', []),
+            diet_goals=user_data.get('dietGoals', []),
+            avoid_ingredients=user_data.get('avoidIngredients', []),
+            created_at=datetime.utcnow()
+        )
+        db.add(user)
+    
+    db.commit()
+    db.refresh(user)
+    return user.to_dict()
 
 
-def update_user_preferences(user_id: str, preferences: Dict) -> Optional[Dict]:
+def update_user_preferences(db: Session, user_id: str, preferences: Dict) -> Optional[Dict]:
     """Update user preferences"""
-    users = read_json_file(USERS_FILE, {})
-    user = users.get(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return None
     
-    # Update preferences - handle both None and empty list cases
     if 'allergies' in preferences:
-        user['allergies'] = preferences['allergies'] if preferences['allergies'] else []
+        user.allergies = preferences['allergies'] or []
     if 'dietGoals' in preferences:
-        user['dietGoals'] = preferences['dietGoals'] if preferences['dietGoals'] else []
+        user.diet_goals = preferences['dietGoals'] or []
     if 'avoidIngredients' in preferences:
-        user['avoidIngredients'] = preferences['avoidIngredients'] if preferences['avoidIngredients'] else []
+        user.avoid_ingredients = preferences['avoidIngredients'] or []
     
-    users[user_id] = user
-    write_json_file(USERS_FILE, users)
-    return user
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+    return user.to_dict()
 
 
-# Scan operations
-def get_user_scans(user_id: str, limit: Optional[int] = None) -> List[Dict]:
-    """Get scans for a user"""
-    scans = read_json_file(SCANS_FILE, {})
-    user_scans = scans.get(user_id, [])
+def apply_dietary_template(db: Session, user_id: str, template_key: str) -> Optional[Dict]:
+    """Apply a predefined dietary template to user preferences"""
+    if template_key not in DIETARY_TEMPLATES:
+        raise ValueError(f"Unknown template: {template_key}")
+    
+    template = DIETARY_TEMPLATES[template_key]
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None
+    
+    # Merge template with existing preferences (don't overwrite, extend)
+    existing_allergies = set(user.allergies or [])
+    existing_goals = set(user.diet_goals or [])
+    existing_avoid = set(user.avoid_ingredients or [])
+    
+    user.allergies = list(existing_allergies | set(template['allergies']))
+    user.diet_goals = list(existing_goals | set(template['dietGoals']))
+    user.avoid_ingredients = list(existing_avoid | set(template['avoidIngredients']))
+    user.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(user)
+    return user.to_dict()
+
+
+# ============== Scan Operations ==============
+
+def get_user_scans(db: Session, user_id: str, limit: Optional[int] = None) -> List[Dict]:
+    """Get scans for a user, ordered by most recent first"""
+    query = db.query(Scan).filter(Scan.user_id == user_id).order_by(Scan.timestamp.desc())
     if limit:
-        return user_scans[:limit]
-    return user_scans
+        query = query.limit(limit)
+    return [scan.to_dict() for scan in query.all()]
 
 
-def add_user_scan(user_id: str, scan_data: Dict) -> Dict:
+def add_user_scan(db: Session, user_id: str, scan_data: Dict) -> Dict:
     """Add a scan for a user"""
-    from datetime import datetime
+    scan_id = scan_data.get('id') or f"scan_{user_id}_{datetime.utcnow().timestamp()}"
     
-    scans = read_json_file(SCANS_FILE, {})
-    if user_id not in scans:
-        scans[user_id] = []
+    scan = Scan(
+        id=scan_id,
+        user_id=user_id,
+        product_name=scan_data.get('productName', ''),
+        brand=scan_data.get('brand', ''),
+        image=scan_data.get('image'),
+        safety_score=scan_data.get('safetyScore', 0),
+        is_safe=scan_data.get('isSafe', False),
+        ingredients=scan_data.get('ingredients', []),
+        timestamp=datetime.utcnow()
+    )
     
-    # Add scan to beginning (most recent first)
-    scan = {
-        **scan_data,
-        'id': scan_data.get('id') or f"scan_{user_id}_{len(scans[user_id])}",
-        'timestamp': scan_data.get('timestamp') or datetime.utcnow().isoformat() + 'Z',
-    }
-    scans[user_id].insert(0, scan)
-    
-    write_json_file(SCANS_FILE, scans)
-    return scan
+    db.add(scan)
+    db.commit()
+    db.refresh(scan)
+    return scan.to_dict()
 
 
-def get_user_stats(user_id: str) -> Optional[Dict]:
+def get_user_stats(db: Session, user_id: str) -> Optional[Dict]:
     """Get statistics for a user"""
-    user_scans = get_user_scans(user_id)
-    if not user_scans:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None
+    
+    scans = db.query(Scan).filter(Scan.user_id == user_id).all()
+    
+    if not scans:
         return {
             'totalScans': 0,
             'todayScans': 0,
@@ -133,35 +154,84 @@ def get_user_stats(user_id: str) -> Optional[Dict]:
             'averageScore': 0,
         }
     
-    from datetime import datetime
-    
     now = datetime.utcnow()
     today_start = datetime(now.year, now.month, now.day)
     
-    today_scans = []
-    for scan in user_scans:
-        try:
-            # Handle both ISO format with and without Z
-            timestamp_str = scan['timestamp'].replace('Z', '')
-            if '+' in timestamp_str:
-                timestamp_str = timestamp_str.split('+')[0]
-            scan_date = datetime.fromisoformat(timestamp_str)
-            if scan_date >= today_start:
-                today_scans.append(scan)
-        except (ValueError, KeyError):
-            continue
+    today_scans = [s for s in scans if s.timestamp and s.timestamp >= today_start]
+    safe_today = sum(1 for s in today_scans if s.is_safe)
     
-    safe_today = sum(1 for scan in today_scans if scan.get('isSafe', False))
-    risky_today = len(today_scans) - safe_today
-    
-    total_score = sum(scan.get('safetyScore', 0) for scan in user_scans)
-    avg_score = int(total_score / len(user_scans)) if user_scans else 0
+    total_score = sum(s.safety_score for s in scans)
+    avg_score = int(total_score / len(scans)) if scans else 0
     
     return {
-        'totalScans': len(user_scans),
+        'totalScans': len(scans),
         'todayScans': len(today_scans),
         'safeToday': safe_today,
-        'riskyToday': risky_today,
+        'riskyToday': len(today_scans) - safe_today,
         'averageScore': avg_score,
     }
 
+
+# ============== Favorites Operations ==============
+
+def get_user_favorites(db: Session, user_id: str) -> List[Dict]:
+    """Get all favorites for a user"""
+    favorites = db.query(Favorite).filter(Favorite.user_id == user_id).order_by(Favorite.added_at.desc()).all()
+    return [fav.to_dict() for fav in favorites]
+
+
+def add_favorite(db: Session, user_id: str, product_data: Dict) -> Dict:
+    """Add a product to user's favorites"""
+    # Check if already favorited
+    existing = db.query(Favorite).filter(
+        Favorite.user_id == user_id,
+        Favorite.product_name == product_data.get('productName', '')
+    ).first()
+    
+    if existing:
+        return existing.to_dict()
+    
+    favorite = Favorite(
+        user_id=user_id,
+        product_name=product_data.get('productName', ''),
+        brand=product_data.get('brand', ''),
+        safety_score=product_data.get('safetyScore'),
+        image=product_data.get('image'),
+        added_at=datetime.utcnow()
+    )
+    
+    db.add(favorite)
+    db.commit()
+    db.refresh(favorite)
+    return favorite.to_dict()
+
+
+def remove_favorite(db: Session, user_id: str, favorite_id: int) -> bool:
+    """Remove a product from user's favorites"""
+    favorite = db.query(Favorite).filter(
+        Favorite.id == favorite_id,
+        Favorite.user_id == user_id
+    ).first()
+    
+    if not favorite:
+        return False
+    
+    db.delete(favorite)
+    db.commit()
+    return True
+
+
+def is_favorite(db: Session, user_id: str, product_name: str) -> bool:
+    """Check if a product is in user's favorites"""
+    favorite = db.query(Favorite).filter(
+        Favorite.user_id == user_id,
+        Favorite.product_name == product_name
+    ).first()
+    return favorite is not None
+
+
+# ============== Dietary Templates ==============
+
+def get_dietary_templates() -> Dict[str, Any]:
+    """Get all available dietary templates"""
+    return DIETARY_TEMPLATES

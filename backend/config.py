@@ -23,7 +23,14 @@ class Settings(BaseModel):
     # CORS Configuration
     cors_origins: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
     
-    # Data Storage
+    # Database
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./safebites.db")
+    
+    # Auth0
+    auth0_domain: str = os.getenv("AUTH0_DOMAIN", "")
+    auth0_api_audience: str = os.getenv("AUTH0_API_AUDIENCE", "")
+    
+    # Legacy (deprecated, kept for compatibility)
     data_dir: str = "data"
     analyses_file: str = "data/analyses.json"
     
