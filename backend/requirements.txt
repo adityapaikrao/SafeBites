@@ -7,3 +7,12 @@ google-genai
 requests
 python-dotenv
 pydantic
+
+# Database
+sqlalchemy
+aiosqlite
+asyncpg
+
+# Authentication
+python-jose[cryptography]
+httpx
