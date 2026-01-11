@@ -10,8 +10,12 @@ import SafetyChart from "./dashboard/SafetyChart";
 import CameraScanner from "./CameraScanner";
 import ScanResult from "./ScanResult";
 import IngredientExplorer from "./IngredientExplorer";
+import HistoryPage from "./HistoryPage";
+import FavoritesPage from "./FavoritesPage";
+import DietaryTemplateSelector from "./DietaryTemplateSelector";
+import { Clock, Star, Settings } from "lucide-react";
 
-type DashboardView = "main" | "camera" | "result" | "explorer";
+type DashboardView = "main" | "camera" | "result" | "explorer" | "history" | "favorites" | "templates";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -31,18 +35,18 @@ export default function Dashboard() {
 
   const fetchUserData = async () => {
     if (!user?.sub) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       // First ensure user exists in backend (via Next.js API which handles Auth0)
       const userResponse = await fetch('/api/user');
       const userData = await userResponse.json();
       setUserData(userData.user);
-      
+
       // Import backend API functions
       const { getUserScans, getUserStats } = await import('@/lib/backendApi');
-      
+
       // Fetch recent scans from backend
       try {
         const scansData = await getUserScans(user.sub, 10);
@@ -51,7 +55,7 @@ export default function Dashboard() {
         console.error('Error fetching scans from backend:', error);
         setScans([]);
       }
-      
+
       // Fetch stats from backend
       try {
         const statsData = await getUserStats(user.sub);
@@ -60,7 +64,7 @@ export default function Dashboard() {
         console.error('Error fetching stats from backend:', error);
         setStats(null);
       }
-      
+
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -117,6 +121,40 @@ export default function Dashboard() {
     );
   }
 
+  // Show History Page
+  if (currentView === "history") {
+    return (
+      <HistoryPage onBack={handleBackToDashboard} />
+    );
+  }
+
+  // Show Favorites Page
+  if (currentView === "favorites") {
+    return (
+      <FavoritesPage onBack={handleBackToDashboard} />
+    );
+  }
+
+  // Show Dietary Templates
+  if (currentView === "templates") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-mint-50 via-white to-mint-50/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={handleBackToDashboard}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6 group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            <span className="font-medium">Back to Dashboard</span>
+          </motion.button>
+          <DietaryTemplateSelector onApply={() => { }} />
+        </div>
+      </div>
+    );
+  }
+
   // Show Main Dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-mint-50 via-white to-mint-50/30">
@@ -127,8 +165,8 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <DashboardHeader 
-            userName={userData?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'} 
+          <DashboardHeader
+            userName={userData?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}
             userEmail={userData?.email || user?.email || ''}
           />
         </motion.div>
@@ -143,8 +181,61 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            {/* Quick Action Cards */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="mt-6 grid grid-cols-3 gap-4"
+            >
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView("history")}
+                className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">History</p>
+                  <p className="text-xs text-gray-500">{stats?.totalScans || 0} scans</p>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView("favorites")}
+                className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Favorites</p>
+                  <p className="text-xs text-gray-500">Saved products</p>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView("templates")}
+                className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Quick Setup</p>
+                  <p className="text-xs text-gray-500">Diet templates</p>
+                </div>
+              </motion.button>
+            </motion.div>
+
             {/* Main Grid Layout */}
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Stats Overview (takes 1 column on large screens) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -163,7 +254,7 @@ export default function Dashboard() {
                 className="lg:col-span-2 space-y-6"
               >
                 <RecentScans scans={scans} />
-                
+
                 {/* Food Universe Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -182,10 +273,10 @@ export default function Dashboard() {
                     <div className="absolute bottom-20 right-24 w-1 h-1 bg-white rounded-full"></div>
                     <div className="absolute top-1/2 left-1/3 w-0.5 h-0.5 bg-white rounded-full"></div>
                   </div>
-                  
+
                   {/* Ambient glow */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl"></div>
-                  
+
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -209,11 +300,11 @@ export default function Dashboard() {
                       <p className="text-indigo-100 text-base max-w-md">
                         Discover connections between ingredients through an interactive constellation visualization
                       </p>
-                      <motion.div 
+                      <motion.div
                         className="text-white font-semibold flex items-center gap-2"
                         whileHover={{ x: 5 }}
                       >
-                        Enter Universe 
+                        Enter Universe
                         <span className="text-2xl">→</span>
                       </motion.div>
                     </div>
@@ -230,4 +321,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

@@ -2,11 +2,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import SafetyScoreDial from "./scan-result/SafetyScoreDial";
 import IngredientList from "./scan-result/IngredientList";
 import BetterAlternatives from "./scan-result/BetterAlternatives";
-import { analyzeProduct, getRecommendations, addUserScan } from "@/lib/backendApi";
+import { analyzeProduct, getRecommendations, addUserScan, addToFavorites, checkFavorite } from "@/lib/backendApi";
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 interface ScanResultProps {
@@ -25,6 +25,8 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
   const [analysisError, setAnalysisError] = React.useState<string | null>(null);
   const [recommendations, setRecommendations] = React.useState<any>(null);
   const [recommendationsError, setRecommendationsError] = React.useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [isAddingFavorite, setIsAddingFavorite] = React.useState(false);
   const hasSavedRef = React.useRef(false);
   const hasAnalyzedRef = React.useRef(false);
 
@@ -35,21 +37,21 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
     try {
       const scoringData = JSON.parse(analysisResponse.scoring_data);
       console.log('Parsed scoring data:', scoringData);
-      
+
       const overallScore = Math.round(scoringData.overall_score * 10); // Convert 0-10 to 0-100
-      
+
       // Validate ingredient_scores exists and is an array
       if (!scoringData.ingredient_scores || !Array.isArray(scoringData.ingredient_scores)) {
         console.error('ingredient_scores is missing or not an array:', scoringData);
         return null;
       }
-      
+
       // Map ingredient scores to UI format
       const ingredients = scoringData.ingredient_scores.map((item: any) => {
         // Normalize safety_score to lowercase for comparison
         const safetyScore = String(item.safety_score || '').toLowerCase().trim();
         let status: "safe" | "moderate" | "risky" = "safe";
-        
+
         if (safetyScore === "low") {
           status = "risky";
         } else if (safetyScore === "medium") {
@@ -88,7 +90,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
   // Parse recommendations response
   const parsedRecommendations = React.useMemo(() => {
     if (!recommendations) return [];
-    
+
     // Handle case where recommendations is a string (JSON)
     if (typeof recommendations === 'string') {
       if (recommendations.length === 0) return [];
@@ -104,7 +106,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
             const healthScoreStr = String(r.health_score || "7");
             const match = healthScoreStr.match(/\d+(\.\d+)?/);
             let score = match ? parseFloat(match[0]) : 7;
-            
+
             // If score is <= 10, assume it's on 0-10 scale and convert to 0-100
             // Otherwise, assume it's already on 0-100 scale
             if (score <= 10) {
@@ -131,7 +133,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
             const healthScoreStr = String(r.health_score || "7");
             const match = healthScoreStr.match(/\d+(\.\d+)?/);
             let score = match ? parseFloat(match[0]) : 7;
-            
+
             // If score is <= 10, assume it's on 0-10 scale and convert to 0-100
             // Otherwise, assume it's already on 0-100 scale
             if (score <= 10) {
@@ -154,7 +156,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
         return [];
       }
     }
-    
+
     // Handle case where recommendations is already an object
     if (typeof recommendations === 'object') {
       // If it has a recommendations array
@@ -184,7 +186,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
           const healthScoreStr = String(r.health_score || "7");
           const match = healthScoreStr.match(/\d+(\.\d+)?/);
           let score = match ? parseFloat(match[0]) : 7;
-          
+
           // If score is <= 10, assume it's on 0-10 scale and convert to 0-100
           // Otherwise, assume it's already on 0-100 scale
           if (score <= 10) {
@@ -250,7 +252,7 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
       try {
         const blob = dataURLtoBlob(imageData);
         // Pass user ID to include preferences in analysis
-        const data = await analyzeProduct(blob, user?.sub || undefined);
+        const data = await analyzeProduct(blob);
         console.log('✅ Backend API Response:', JSON.stringify(data, null, 2));
         setAnalysisResponse(data);
 
@@ -259,13 +261,13 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
           try {
             const scoringData = JSON.parse(data.scoring_data);
             const overallScore = scoringData.overall_score;
-            
+
             setIsLoadingRecommendations(true);
             setRecommendationsError(null);
-            
+
             const recData = await getRecommendations(data.product_name, overallScore);
             console.log('✅ Recommendations Response:', JSON.stringify(recData, null, 2));
-            
+
             // Handle the response structure - reccomender_data is a JSON string
             if (recData.reccomender_data) {
               // reccomender_data is a JSON string that needs to be parsed
@@ -311,14 +313,14 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
       console.log('Scan already saved, skipping...');
       return;
     }
-    
+
     const saveScanOnce = async () => {
       // Double-check before saving
       if (hasSavedRef.current || !productData || !user?.sub) return;
-      
+
       hasSavedRef.current = true; // Mark as saved immediately
       setIsSaving(true);
-      
+
       try {
         // Use productData directly - save to backend
         const scanData = {
@@ -436,12 +438,51 @@ export default function ScanResult({ imageData, onBack }: ScanResultProps) {
           >
             {/* Product Image Card */}
             <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
+              <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 mb-4 relative">
                 <img
                   src={imageData}
                   alt="Product"
                   className="w-full h-full object-cover"
                 />
+                {/* Favorite Button */}
+                {productData && user?.sub && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={async () => {
+                      if (!user?.sub || !productData) return;
+                      setIsAddingFavorite(true);
+                      try {
+                        await addToFavorites(user.sub, {
+                          productName: productData.productName,
+                          brand: productData.brand,
+                          safetyScore: productData.safetyScore,
+                          image: imageData,
+                        });
+                        setIsFavorite(true);
+                      } catch (error) {
+                        console.error('Error adding to favorites:', error);
+                      } finally {
+                        setIsAddingFavorite(false);
+                      }
+                    }}
+                    disabled={isFavorite || isAddingFavorite}
+                    className={`absolute top-3 right-3 p-2 rounded-full shadow-lg transition-colors ${isFavorite
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-white/90 hover:bg-amber-100 text-gray-600 hover:text-amber-500'
+                      }`}
+                  >
+                    {isAddingFavorite ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      <Star className={`w-5 h-5 ${isFavorite ? 'fill-white' : ''}`} />
+                    )}
+                  </motion.button>
+                )}
               </div>
               <div className="text-center">
                 <h2 className="text-2xl font-display font-bold text-gray-900 mb-1">
