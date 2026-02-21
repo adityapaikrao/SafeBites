@@ -19,7 +19,7 @@ func main() {
 	log.Printf("starting SafeBites Go backend [env=%s port=%s]", cfg.Env, cfg.Port)
 
 	ctx := context.Background()
-	if err := repository.RunMigrations(cfg.DatabaseURL, "migrations"); err != nil {
+	if err := repository.RunMigrations(cfg.DatabaseURL, cfg.MigrationsPath); err != nil {
 		log.Fatalf("migrations failed: %v", err)
 	}
 

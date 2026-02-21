@@ -1,4 +1,4 @@
-include .env
+-include .env
 export
 
 BINARY   := bin/server
@@ -38,7 +38,7 @@ migrate-up:
 	migrate -path migrations -database "$(DATABASE_URL)" up
 
 migrate-down:
-	migrate -path migrations -database "$(DATABASE_URL)" down
+	migrate -path migrations -database "$(DATABASE_URL)" down 1
 
 migrate-create:
 	@read -p "Migration name: " name; \
