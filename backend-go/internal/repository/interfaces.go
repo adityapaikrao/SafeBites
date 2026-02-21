@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	"github.com/safebites/backend-go/internal/model"
 )
 
 var ErrNotFound = errors.New("not found")

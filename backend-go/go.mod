@@ -1,4 +1,4 @@
-module github.com/REDACTED_PASSWORD/backend-go
+module github.com/safebites/backend-go
 
 go 1.25.1
 

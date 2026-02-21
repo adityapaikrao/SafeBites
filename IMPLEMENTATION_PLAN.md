@@ -124,7 +124,7 @@ Add "Quick Setup" section with dietary template buttons (Vegan, Keto, etc.).
 ```yaml
 services:
   - type: web
-    name: REDACTED_PASSWORD-api
+    name: safebites-api
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT

@@ -12,7 +12,7 @@ import (
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/geminitool"
 
-	sbmodel "github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	sbmodel "github.com/safebites/backend-go/internal/model"
 )
 
 type RecommenderAgent struct {
@@ -49,7 +49,7 @@ func (a *RecommenderAgent) Recommend(ctx context.Context, productName string, sc
 		return nil, fmt.Errorf("marshal recommender payload: %w", err)
 	}
 
-	raw, err := runAgentOnce(ctx, "REDACTED_PASSWORD-recommender", a.agent, string(buf))
+	raw, err := runAgentOnce(ctx, "safebites-recommender", a.agent, string(buf))
 	if err != nil {
 		return nil, err
 	}

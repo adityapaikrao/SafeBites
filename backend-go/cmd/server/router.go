@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/config"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/handler"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/middleware"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/repository"
+	"github.com/safebites/backend-go/internal/config"
+	"github.com/safebites/backend-go/internal/handler"
+	"github.com/safebites/backend-go/internal/middleware"
+	"github.com/safebites/backend-go/internal/repository"
 )
 
 // buildRouter wires all middleware, routes, and handlers together.

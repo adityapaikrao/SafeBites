@@ -10,7 +10,7 @@ import (
 	"google.golang.org/adk/agent/llmagent"
 	adkmodel "google.golang.org/adk/model"
 
-	sbmodel "github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	sbmodel "github.com/safebites/backend-go/internal/model"
 )
 
 type ScorerAgent struct {
@@ -65,7 +65,7 @@ func (a *ScorerAgent) scoreFromPayload(ctx context.Context, agnt agent.Agent, pa
 		return nil, fmt.Errorf("marshal scorer payload: %w", err)
 	}
 
-	raw, err := runAgentOnce(ctx, "REDACTED_PASSWORD-scorer", agnt, string(buf))
+	raw, err := runAgentOnce(ctx, "safebites-scorer", agnt, string(buf))
 	if err != nil {
 		return nil, err
 	}

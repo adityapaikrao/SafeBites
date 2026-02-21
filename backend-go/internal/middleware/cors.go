@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/cors"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/config"
+	"github.com/safebites/backend-go/internal/config"
 )
 
 func CORS(cfg *config.Config) func(http.Handler) http.Handler {

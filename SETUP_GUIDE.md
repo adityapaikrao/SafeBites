@@ -86,7 +86,7 @@ ENV=development
 CORS_ORIGINS=http://localhost:3000
 
 # Database (SQLite for local dev)
-DATABASE_URL=sqlite:///./REDACTED_PASSWORD.db
+DATABASE_URL=sqlite:///./safebites.db
 
 # Auth0 (optional for dev mode)
 AUTH0_DOMAIN=dev-abc123.us.auth0.com

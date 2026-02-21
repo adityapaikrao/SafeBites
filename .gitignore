@@ -19,5 +19,5 @@ node_modules/
 venv/
 
 # local database files
-backend/REDACTED_PASSWORD.db
+backend/safebites.db
 *.db

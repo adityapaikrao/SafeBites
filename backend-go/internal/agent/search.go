@@ -12,7 +12,7 @@ import (
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/geminitool"
 
-	sbmodel "github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	sbmodel "github.com/safebites/backend-go/internal/model"
 )
 
 type SearchAgent struct {
@@ -40,7 +40,7 @@ func (a *SearchAgent) Search(ctx context.Context, productName string) (*sbmodel.
 		return nil, fmt.Errorf("product name is required")
 	}
 
-	raw, err := runAgentOnce(ctx, "REDACTED_PASSWORD-search", a.agent, productName)
+	raw, err := runAgentOnce(ctx, "safebites-search", a.agent, productName)
 	if err != nil {
 		return nil, err
 	}

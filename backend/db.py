@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from models import Base
 
 # Get database URL from environment, default to SQLite for development
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./REDACTED_PASSWORD.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./safebites.db")
 
 # Handle PostgreSQL URL format from Render/Supabase (postgres:// -> postgresql://)
 if DATABASE_URL.startswith("postgres://"):

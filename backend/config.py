@@ -24,7 +24,7 @@ class Settings(BaseModel):
     cors_origins: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
     
     # Database
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./REDACTED_PASSWORD.db")
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./safebites.db")
     
     # Auth0
     auth0_domain: str = os.getenv("AUTH0_DOMAIN", "")

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/config"
+	"github.com/safebites/backend-go/internal/config"
 )
 
 type contextKey string
@@ -82,6 +82,8 @@ func bearerToken(authorizationHeader string) string {
 }
 
 func userIDFromToken(rawToken string) (string, bool) {
+	// TODO: Production hardening: replace ParseUnverified with full JWT verification
+	// against Auth0 JWKS, issuer, audience, and signing algorithm constraints.
 	claims := jwt.MapClaims{}
 	_, _, err := jwt.NewParser().ParseUnverified(rawToken, claims)
 	if err != nil {

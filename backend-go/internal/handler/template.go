@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/model"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/repository"
+	"github.com/safebites/backend-go/internal/model"
+	"github.com/safebites/backend-go/internal/repository"
 )
 
 type TemplateHandler struct {

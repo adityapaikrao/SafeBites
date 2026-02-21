@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	"github.com/safebites/backend-go/internal/model"
 )
 
 type favoriteQuerier interface {

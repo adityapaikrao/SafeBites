@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: REDACTED_PASSWORD-api
+    name: safebites-api
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt

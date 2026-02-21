@@ -472,7 +472,7 @@ PORT=8080
 ENV=development                          # "development" | "production"
 
 # Database
-DATABASE_URL=postgres://REDACTED_PASSWORD:REDACTED_PASSWORD@localhost:5432/REDACTED_PASSWORD?sslmode=disable
+DATABASE_URL=postgres://safebites:safebites@localhost:5432/safebites?sslmode=disable
 
 # Google AI
 GOOGLE_API_KEY=your-gemini-api-key
@@ -733,5 +733,5 @@ test-cover:     go test ./... -coverprofile=coverage.out && go tool cover -html=
 migrate-up:     migrate -path migrations -database "$(DATABASE_URL)" up
 migrate-down:   migrate -path migrations -database "$(DATABASE_URL)" down
 lint:           golangci-lint run
-docker-build:   docker build -t REDACTED_PASSWORD-backend .
+docker-build:   docker build -t safebites-backend .
 ```

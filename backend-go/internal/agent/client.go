@@ -37,8 +37,8 @@ func runAgentOnce(ctx context.Context, appName string, agnt agent.Agent, input s
 		return "", fmt.Errorf("create adk runner: %w", err)
 	}
 
-	const userID = "REDACTED_PASSWORD-agent"
-	const sessionID = "REDACTED_PASSWORD-session"
+	const userID = "safebites-agent"
+	const sessionID = "safebites-session"
 	_, err = sessionService.Create(ctx, &session.CreateRequest{
 		AppName:   appName,
 		UserID:    userID,

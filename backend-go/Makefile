@@ -1,9 +1,9 @@
-include .env
+-include .env
 export
 
 BINARY   := bin/server
 CMD      := ./cmd/server
-DATABASE_URL ?= postgres://REDACTED_PASSWORD:REDACTED_PASSWORD@localhost:5432/REDACTED_PASSWORD?sslmode=disable
+DATABASE_URL ?= postgres://safebites:safebites@localhost:5432/safebites?sslmode=disable
 
 .PHONY: build run test test-cover lint migrate-up migrate-down migrate-create \
         docker-build docker-up docker-down deps tidy
@@ -38,7 +38,7 @@ migrate-up:
 	migrate -path migrations -database "$(DATABASE_URL)" up
 
 migrate-down:
-	migrate -path migrations -database "$(DATABASE_URL)" down
+	migrate -path migrations -database "$(DATABASE_URL)" down 1
 
 migrate-create:
 	@read -p "Migration name: " name; \
@@ -67,7 +67,7 @@ tidy:
 ## ── Docker ──────────────────────────────────────────────────────────────────
 
 docker-build:
-	docker build -t REDACTED_PASSWORD-backend .
+	docker build -t safebites-backend .
 
 docker-up:
 	docker compose up --build

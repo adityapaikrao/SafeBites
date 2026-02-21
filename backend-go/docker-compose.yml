@@ -1,30 +1,30 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: REDACTED_PASSWORD_postgres
+    container_name: safebites_postgres
     environment:
-      POSTGRES_USER: REDACTED_PASSWORD
-      POSTGRES_PASSWORD: REDACTED_PASSWORD
-      POSTGRES_DB: REDACTED_PASSWORD
+      POSTGRES_USER: safebites
+      POSTGRES_PASSWORD: safebites
+      POSTGRES_DB: safebites
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U REDACTED_PASSWORD -d REDACTED_PASSWORD"]
+      test: ["CMD-SHELL", "pg_isready -U safebites -d safebites"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   app:
     build: .
-    container_name: REDACTED_PASSWORD_backend
+    container_name: safebites_backend
     depends_on:
       postgres:
         condition: service_healthy
     env_file: .env
     environment:
-      DATABASE_URL: postgres://REDACTED_PASSWORD:REDACTED_PASSWORD@postgres:5432/REDACTED_PASSWORD?sslmode=disable
+      DATABASE_URL: postgres://safebites:safebites@postgres:5432/safebites?sslmode=disable
     ports:
       - "8080:8080"
 

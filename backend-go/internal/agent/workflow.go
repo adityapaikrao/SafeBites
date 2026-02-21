@@ -13,7 +13,7 @@ import (
 	adkmodel "google.golang.org/adk/model"
 	"google.golang.org/adk/session"
 
-	sbmodel "github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	sbmodel "github.com/safebites/backend-go/internal/model"
 )
 
 const (
@@ -141,7 +141,7 @@ func (o *Orchestrator) AnalyzeAndImprove(ctx context.Context, productName string
 		return nil, fmt.Errorf("create adk sequential workflow: %w", err)
 	}
 
-	_, err = runAgentOnce(ctx, "REDACTED_PASSWORD-analysis-workflow", sequential, productName)
+	_, err = runAgentOnce(ctx, "safebites-analysis-workflow", sequential, productName)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func (o *Orchestrator) AnalyzeAndImprove(ctx context.Context, productName string
 		return nil, fmt.Errorf("create adk loop workflow: %w", err)
 	}
 
-	_, err = runAgentOnce(ctx, "REDACTED_PASSWORD-loop-workflow", loopWorkflow, productName)
+	_, err = runAgentOnce(ctx, "safebites-loop-workflow", loopWorkflow, productName)
 	if err != nil {
 		return nil, err
 	}

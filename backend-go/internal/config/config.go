@@ -13,6 +13,7 @@ type Config struct {
 	Port             string
 	Env              string
 	DatabaseURL      string
+	MigrationsPath   string
 	GoogleAPIKey     string
 	Auth0Domain      string
 	Auth0APIAudience string
@@ -28,6 +29,7 @@ func Load() *Config {
 		Port:             getEnv("PORT", "8080"),
 		Env:              getEnv("ENV", "development"),
 		DatabaseURL:      requireEnv("DATABASE_URL"),
+		MigrationsPath:   getEnv("MIGRATIONS_PATH", "migrations"),
 		GoogleAPIKey:     requireEnv("GOOGLE_API_KEY"),
 		Auth0Domain:      getEnv("AUTH0_DOMAIN", ""),
 		Auth0APIAudience: getEnv("AUTH0_API_AUDIENCE", ""),
@@ -44,7 +46,7 @@ func (c *Config) IsDev() bool {
 
 // DevModeAuth returns true when Auth0 is not configured (dev bypass).
 func (c *Config) DevModeAuth() bool {
-	return c.Auth0Domain == "" || c.IsDev()
+	return c.Auth0Domain == "" || c.Auth0APIAudience == ""
 }
 
 func getEnv(key, fallback string) string {

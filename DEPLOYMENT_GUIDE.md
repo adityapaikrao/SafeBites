@@ -41,10 +41,10 @@ Follow this step-by-step guide to deploy your full-stack application to the web.
 | `OPENAI_API_KEY` | your openai api key |
 | `GEMINI_API_KEY` | your gemini api key |
 | `AUTH0_DOMAIN` | your-tenant.auth0.com |
-| `AUTH0_API_AUDIENCE` | https://REDACTED_PASSWORD-api |
+| `AUTH0_API_AUDIENCE` | https://safebites-api |
 
 9. Click **Create Web Service**.
-10. Wait for deployment. Once live, copy your **Backend URL** (e.g., `https://REDACTED_PASSWORD-api.onrender.com`).
+10. Wait for deployment. Once live, copy your **Backend URL** (e.g., `https://safebites-api.onrender.com`).
 
 ---
 
@@ -65,7 +65,7 @@ Follow this step-by-step guide to deploy your full-stack application to the web.
 | `AUTH0_CLIENT_SECRET` | from Auth0 dashboard |
 | `NEXT_PUBLIC_BACKEND_URL` | your Render backend URL (from Step 2) |
 
-> **Note on AUTH0_BASE_URL**: On Vercel, you often have to deploy once to get the domain, then update this variable with the assigned domain (e.g., `https://REDACTED_PASSWORD.vercel.app`), and redeploy.
+> **Note on AUTH0_BASE_URL**: On Vercel, you often have to deploy once to get the domain, then update this variable with the assigned domain (e.g., `https://safebites.vercel.app`), and redeploy.
 
 6. Click **Deploy**.
 
@@ -88,6 +88,6 @@ Follow this step-by-step guide to deploy your full-stack application to the web.
 
 ## ✅ Step 5: Verification
 
-1. Go to your Vercel URL (e.g., `https://REDACTED_PASSWORD.vercel.app`).
+1. Go to your Vercel URL (e.g., `https://safebites.vercel.app`).
 2. Login should work (redirects to Auth0 and back).
 3. Try scanning an item. It should talk to the Render backend, which talks to the Supabase DB.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	"github.com/safebites/backend-go/internal/model"
 	"github.com/stretchr/testify/require"
 )
 

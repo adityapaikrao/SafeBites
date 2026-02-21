@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/model"
+	"github.com/safebites/backend-go/internal/model"
 	"github.com/stretchr/testify/require"
 )
 

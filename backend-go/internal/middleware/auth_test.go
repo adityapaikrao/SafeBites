@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/REDACTED_PASSWORD/backend-go/internal/config"
+	"github.com/safebites/backend-go/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
