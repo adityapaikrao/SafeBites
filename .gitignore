@@ -17,3 +17,7 @@ node_modules/
 
 # Virtual environments
 venv/
+
+# local database files
+backend/REDACTED_PASSWORD.db
+*.db
